@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0b0f" />
+<title>Forge — Premium Workout Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== APP SHELL ===== -->
+<div class="app">
+
+  <!-- =========================================================
+       ONBOARDING
+  ========================================================= -->
+  <section id="onboarding" class="screen onboarding hidden">
+    <div class="onboard-wrap">
+      <header class="onboard-head">
+        <div class="brand">
+          <div class="logo">F</div>
+          <div>
+            <h1 class="brand-name">Forge</h1>
+            <p class="brand-tag">Build your strongest week.</p>
+          </div>
+        </div>
+        <div class="step-dots" id="stepDots"></div>
+      </header>
+
+      <div class="onboard-body" id="onboardBody"></div>
+
+      <footer class="onboard-foot">
+        <button class="btn ghost" id="onboardBack">Back</button>
+        <button class="btn primary" id="onboardNext">Continue</button>
+      </footer>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       MAIN PAGES
+  ========================================================= -->
+  <main id="mainApp" class="hidden">
+
+    <!-- TODAY -->
+    <section id="page-today" class="page">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="todayDate"></p>
+          <h2 class="title">Today</h2>
+        </div>
+        <button class="icon-btn" id="themeToggleTop" title="Toggle theme">◐</button>
+      </header>
+
+      <div class="card glass coach-card">
+        <div class="coach-avatar">C</div>
+        <div>
+          <p class="muted xs">Coach Notes</p>
+          <p id="coachNotes" class="coach-text">Stay consistent — small wins compound.</p>
+        </div>
+      </div>
+
+      <div class="grid-3 stats-row">
+        <div class="card glass stat">
+          <p class="muted xs">Week</p>
+          <p class="stat-val" id="statWeek">—</p>
+        </div>
+        <div class="card glass stat">
+          <p class="muted xs">Phase</p>
+          <p class="stat-val sm" id="statPhase">—</p>
+        </div>
+        <div class="card glass stat">
+          <p class="muted xs">Next Overload</p>
+          <p class="stat-val sm" id="statOverload">—</p>
+        </div>
+      </div>
+
+      <div class="card glass workout-card" id="todayWorkoutCard">
+        <div class="workout-head">
+          <div>
+            <p class="eyebrow" id="todayWorkoutType">Workout</p>
+            <h3 class="workout-title" id="todayWorkoutTitle">—</h3>
+            <p class="muted sm"><span id="todayDuration">0</span> min · <span id="todayExCount">0</span> exercises</p>
+          </div>
+          <div class="ring" id="progressRing">
+            <svg viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="28" class="ring-bg"/>
+              <circle cx="32" cy="32" r="28" class="ring-fg" id="ringFg"/>
+            </svg>
+            <span id="ringPct">0%</span>
+          </div>
+        </div>
+
+        <div class="exercise-list" id="exerciseList"></div>
+
+        <div class="workout-actions">
+          <button class="btn ghost" id="skipWorkoutBtn">Skip</button>
+          <button class="btn primary" id="completeWorkoutBtn">Mark Complete</button>
+        </div>
+      </div>
+
+      <div class="rest-card card glass hidden" id="restCard">
+        <h3>Rest Day 🌿</h3>
+        <p class="muted">Recover well — hydrate, stretch, and sleep.</p>
+      </div>
+    </section>
+
+    <!-- PLAN -->
+    <section id="page-plan" class="page hidden">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">This Week</p>
+          <h2 class="title">Plan</h2>
+        </div>
+        <button class="btn ghost sm" id="regenerateBtn">Regenerate</button>
+      </header>
+      <div class="week-list" id="weekList"></div>
+    </section>
+
+    <!-- PROGRESS -->
+    <section id="page-progress" class="page hidden">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Your Journey</p>
+          <h2 class="title">Progress</h2>
+        </div>
+      </header>
+
+      <div class="grid-2">
+        <div class="card glass stat-big">
+          <p class="muted xs">Streak</p>
+          <p class="big-num"><span id="streakCount">0</span><span class="unit">🔥</span></p>
+        </div>
+        <div class="card glass stat-big">
+          <p class="muted xs">Workouts</p>
+          <p class="big-num" id="totalCount">0</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card glass stat-big">
+          <p class="muted xs">Week</p>
+          <p class="big-num" id="progWeek">1</p>
+        </div>
+        <div class="card glass stat-big">
+          <p class="muted xs">Phase</p>
+          <p class="big-num sm" id="progPhase">Base</p>
+        </div>
+      </div>
+
+      <div class="card glass">
+        <p class="muted xs">Weekly Completion</p>
+        <div class="weekly-ring-wrap">
+          <div class="ring big" id="weeklyRing">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" class="ring-bg"/>
+              <circle cx="60" cy="60" r="52" class="ring-fg" id="weeklyRingFg"/>
+            </svg>
+            <span id="weeklyPct">0%</span>
+          </div>
+          <div>
+            <p class="big-num sm"><span id="weeklyDone">0</span>/<span id="weeklyTotal">0</span></p>
+            <p class="muted sm">Workouts this week</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card glass">
+        <h3 class="section-h">Personal Records</h3>
+        <div id="prList" class="pr-list"><p class="muted sm">No records yet — log a weight to get started.</p></div>
+      </div>
+
+      <div class="card glass">
+        <h3 class="section-h">History</h3>
+        <div id="historyList" class="history-list"><p class="muted sm">No completed workouts yet.</p></div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="page-profile" class="page hidden">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Account</p>
+          <h2 class="title">Profile</h2>
+        </div>
+      </header>
+
+      <div class="card glass profile-card">
+        <div class="avatar" id="profileAvatar">A</div>
+        <div class="profile-info">
+          <input type="text" id="profileName" class="name-input" placeholder="Anonymous" />
+          <p class="muted sm" id="profileSub">Athlete</p>
+        </div>
+      </div>
+
+      <div class="card glass">
+        <h3 class="section-h">Appearance</h3>
+        <div class="theme-row">
+          <button class="theme-pill" data-theme-set="dark">🌙 Dark</button>
+          <button class="theme-pill" data-theme-set="light">☀️ Light</button>
+        </div>
+      </div>
+
+      <div class="card glass summary-card">
+        <h3 class="section-h">Your Setup</h3>
+        <div class="summary-row"><span class="muted">Goal</span><span id="sumGoal">—</span></div>
+        <div class="summary-row"><span class="muted">Level</span><span id="sumLevel">—</span></div>
+        <div class="summary-row"><span class="muted">Equipment</span><span id="sumEquip">—</span></div>
+        <div class="summary-row"><span class="muted">Weekly target</span><span id="sumDays">—</span></div>
+        <div class="summary-row"><span class="muted">Duration</span><span id="sumDuration">—</span></div>
+        <div class="summary-row"><span class="muted">Intensity</span><span id="sumIntensity">—</span></div>
+      </div>
+
+      <button class="btn outline wide" id="rebuildBtn">Rebuild Plan</button>
+      <button class="btn danger wide" id="resetAllBtn">Reset Everything</button>
+      <div style="height:120px"></div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================
+       BOTTOM NAV with center FAB
+  ========================================================= -->
+  <nav id="bottomNav" class="bottom-nav hidden">
+    <svg class="nav-bg" viewBox="0 0 400 80" preserveAspectRatio="none">
+      <path d="M0,0 L155,0 C165,0 168,28 200,28 C232,28 235,0 245,0 L400,0 L400,80 L0,80 Z"/>
+    </svg>
+    <button class="nav-item active" data-page="today">
+      <span class="nav-ico">◉</span><span class="nav-label">Today</span>
+    </button>
+    <button class="nav-item" data-page="plan">
+      <span class="nav-ico">▦</span><span class="nav-label">Plan</span>
+    </button>
+    <button class="fab" id="fabBtn" title="Plan Builder">+</button>
+    <button class="nav-item" data-page="progress">
+      <span class="nav-ico">▲</span><span class="nav-label">Progress</span>
+    </button>
+    <button class="nav-item" data-page="profile">
+      <span class="nav-ico">●</span><span class="nav-label">Profile</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- =========================================================
+     MODALS
+========================================================= -->
+
+<!-- Difficulty feedback -->
+<div class="modal-bg hidden" id="feedbackModal">
+  <div class="modal glass">
+    <h3>How did it feel?</h3>
+    <p class="muted sm">Your feedback tunes future workouts.</p>
+    <div class="feedback-row">
+      <button class="fb-btn" data-fb="easy">😌<span>Too easy</span></button>
+      <button class="fb-btn" data-fb="just">💪<span>Just right</span></button>
+      <button class="fb-btn" data-fb="hard">🥵<span>Too hard</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Plan editor -->
+<div class="modal-bg hidden" id="editorModal">
+  <div class="modal glass big">
+    <header class="modal-head">
+      <h3 id="editorTitle">Edit Day</h3>
+      <button class="icon-btn" id="closeEditor">✕</button>
+    </header>
+    <div class="modal-body">
+      <label class="field">
+        <span>Workout title</span>
+        <input type="text" id="editTitle" />
+      </label>
+      <label class="field">
+        <span>Duration (min)</span>
+        <input type="number" id="editDuration" min="5" max="180" />
+      </label>
+      <div class="ex-edit-list" id="exEditList"></div>
+      <button class="btn outline wide" id="addExerciseBtn">+ Add Exercise</button>
+    </div>
+    <footer class="modal-foot">
+      <button class="btn ghost" id="cancelEditor">Cancel</button>
+      <button class="btn primary" id="saveEditor">Save</button>
+    </footer>
+  </div>
+</div>
+
+<!-- Confirm -->
+<div class="modal-bg hidden" id="confirmModal">
+  <div class="modal glass">
+    <h3 id="confirmTitle">Confirm</h3>
+    <p class="muted" id="confirmMsg"></p>
+    <div class="modal-foot">
+      <button class="btn ghost" id="confirmNo">Cancel</button>
+      <button class="btn danger" id="confirmYes">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast hidden"></div>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,507 +1,1215 @@
-/* =========================================================
-   FORGE — Premium Workout Planner
-   Pure CSS, mobile-first, dark/light theme
-========================================================= */
+// ===== FitForge - Premium Workout Planner =====
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; }
-body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: var(--bg);
-  color: var(--fg);
-  overflow-x: hidden;
-  transition: background .4s ease, color .3s ease;
-  -webkit-font-smoothing: antialiased;
-}
+// ===== Constants =====
+const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-/* ---------- Theme tokens ---------- */
-:root,
-[data-theme="dark"] {
-  --bg: radial-gradient(1200px 800px at 80% -10%, #1a1010 0%, #0a0a0e 45%, #06060a 100%);
-  --bg-solid: #0a0a0e;
-  --fg: #f3f3f5;
-  --muted: #8a8a98;
-  --card: rgba(255,255,255,0.04);
-  --card-border: rgba(255,255,255,0.08);
-  --glass-blur: blur(20px);
-  --accent: #FF7518;
-  --accent-2: #ffa45c;
-  --accent-soft: rgba(255,117,24,0.14);
-  --accent-glow: 0 8px 30px rgba(255,117,24,0.45);
-  --shadow-lg: 0 20px 50px rgba(0,0,0,0.5);
-  --shadow-sm: 0 4px 14px rgba(0,0,0,0.35);
-  --nav-bg: rgba(14,14,18,0.85);
-  --input-bg: rgba(255,255,255,0.05);
-  --danger: #ff5470;
-  --success: #4ade80;
-}
+const PHASES = [
+  { name: 'Base', weeks: [1, 2], description: 'Building foundation' },
+  { name: 'Reps', weeks: [3, 4], description: 'Increasing reps' },
+  { name: 'Weight', weeks: [5, 6], description: 'Progressive weight' },
+  { name: 'Volume', weeks: [7, 8], description: 'Maximum volume' },
+  { name: 'Advanced', weeks: [9, 999], description: 'Peak performance' }
+];
 
-[data-theme="light"] {
-  --bg: radial-gradient(1200px 800px at 80% -10%, #fff1e6 0%, #fafafa 50%, #f3f3f6 100%);
-  --bg-solid: #fafafa;
-  --fg: #14141a;
-  --muted: #6b6b78;
-  --card: rgba(255,255,255,0.7);
-  --card-border: rgba(20,20,30,0.08);
-  --glass-blur: blur(18px);
-  --accent: #FF7518;
-  --accent-2: #ff944c;
-  --accent-soft: rgba(255,117,24,0.12);
-  --accent-glow: 0 8px 24px rgba(255,117,24,0.3);
-  --shadow-lg: 0 20px 40px rgba(0,0,0,0.08);
-  --shadow-sm: 0 4px 14px rgba(0,0,0,0.06);
-  --nav-bg: rgba(255,255,255,0.85);
-  --input-bg: rgba(20,20,30,0.04);
-  --danger: #e0395a;
-  --success: #16a34a;
-}
+const COACH_NOTES = {
+  'build-muscle': [
+    "Focus on time under tension today. Slow, controlled reps build bigger muscles.",
+    "Mind-muscle connection is key! Feel every rep in the target muscle.",
+    "Push yourself but maintain perfect form. Quality over quantity!"
+  ],
+  'lose-weight': [
+    "Keep rest times short to maximize calorie burn. You've got this!",
+    "Every rep brings you closer to your goals. Stay consistent!",
+    "High intensity, maximum effort! Your body will thank you later."
+  ],
+  'get-stronger': [
+    "Strength is built in the struggle. Embrace the challenge!",
+    "Focus on progressive overload. Even small increases add up!",
+    "Rest well between sets. Strength training requires full recovery."
+  ],
+  'improve-endurance': [
+    "Push through the burn! Your cardiovascular system is adapting.",
+    "Consistency builds endurance. Every workout counts!",
+    "Keep moving, keep breathing. You're building a stronger heart!"
+  ],
+  'stay-healthy': [
+    "Movement is medicine. Great job showing up today!",
+    "Balance is key. Enjoy the workout and listen to your body.",
+    "Every step towards health is a step in the right direction!"
+  ]
+};
 
-/* ---------- Layout ---------- */
-.app { min-height: 100vh; max-width: 720px; margin: 0 auto; position: relative; }
-.hidden { display: none !important; }
+const EXERCISE_DATABASE = {
+  // Upper Body - Push
+  'push-ups': { name: 'Push-ups', type: 'bodyweight', muscle: 'chest', equipment: ['bodyweight'] },
+  'diamond-push-ups': { name: 'Diamond Push-ups', type: 'bodyweight', muscle: 'triceps', equipment: ['bodyweight'] },
+  'pike-push-ups': { name: 'Pike Push-ups', type: 'bodyweight', muscle: 'shoulders', equipment: ['bodyweight'] },
+  'dumbbell-bench-press': { name: 'Dumbbell Bench Press', type: 'weighted', muscle: 'chest', equipment: ['dumbbells'], baseWeight: 20 },
+  'dumbbell-shoulder-press': { name: 'Dumbbell Shoulder Press', type: 'weighted', muscle: 'shoulders', equipment: ['dumbbells'], baseWeight: 15 },
+  'dumbbell-lateral-raises': { name: 'Lateral Raises', type: 'weighted', muscle: 'shoulders', equipment: ['dumbbells'], baseWeight: 8 },
+  'tricep-dips': { name: 'Tricep Dips', type: 'bodyweight', muscle: 'triceps', equipment: ['bodyweight'] },
+  'overhead-tricep-extension': { name: 'Overhead Tricep Extension', type: 'weighted', muscle: 'triceps', equipment: ['dumbbells'], baseWeight: 12 },
+  'barbell-bench-press': { name: 'Barbell Bench Press', type: 'weighted', muscle: 'chest', equipment: ['barbell'], baseWeight: 45 },
+  'overhead-press': { name: 'Overhead Press', type: 'weighted', muscle: 'shoulders', equipment: ['barbell'], baseWeight: 35 },
+  'chest-press-machine': { name: 'Chest Press Machine', type: 'machine', muscle: 'chest', equipment: ['gym-machines'], baseWeight: 40 },
+  'shoulder-press-machine': { name: 'Shoulder Press Machine', type: 'machine', muscle: 'shoulders', equipment: ['gym-machines'], baseWeight: 30 },
+  'cable-flyes': { name: 'Cable Flyes', type: 'machine', muscle: 'chest', equipment: ['gym-machines'], baseWeight: 15 },
+  'band-push-ups': { name: 'Band-Resisted Push-ups', type: 'bodyweight', muscle: 'chest', equipment: ['resistance-bands'] },
+  'band-shoulder-press': { name: 'Band Shoulder Press', type: 'band', muscle: 'shoulders', equipment: ['resistance-bands'] },
+  
+  // Upper Body - Pull
+  'pull-ups': { name: 'Pull-ups', type: 'bodyweight', muscle: 'back', equipment: ['bodyweight'] },
+  'chin-ups': { name: 'Chin-ups', type: 'bodyweight', muscle: 'back', equipment: ['bodyweight'] },
+  'inverted-rows': { name: 'Inverted Rows', type: 'bodyweight', muscle: 'back', equipment: ['bodyweight'] },
+  'dumbbell-rows': { name: 'Dumbbell Rows', type: 'weighted', muscle: 'back', equipment: ['dumbbells'], baseWeight: 25 },
+  'dumbbell-curls': { name: 'Bicep Curls', type: 'weighted', muscle: 'biceps', equipment: ['dumbbells'], baseWeight: 12 },
+  'hammer-curls': { name: 'Hammer Curls', type: 'weighted', muscle: 'biceps', equipment: ['dumbbells'], baseWeight: 12 },
+  'barbell-rows': { name: 'Barbell Rows', type: 'weighted', muscle: 'back', equipment: ['barbell'], baseWeight: 65 },
+  'barbell-curls': { name: 'Barbell Curls', type: 'weighted', muscle: 'biceps', equipment: ['barbell'], baseWeight: 30 },
+  'deadlifts': { name: 'Deadlifts', type: 'weighted', muscle: 'back', equipment: ['barbell'], baseWeight: 95 },
+  'lat-pulldown': { name: 'Lat Pulldown', type: 'machine', muscle: 'back', equipment: ['gym-machines'], baseWeight: 50 },
+  'seated-rows': { name: 'Seated Cable Rows', type: 'machine', muscle: 'back', equipment: ['gym-machines'], baseWeight: 50 },
+  'band-rows': { name: 'Band Rows', type: 'band', muscle: 'back', equipment: ['resistance-bands'] },
+  'band-curls': { name: 'Band Curls', type: 'band', muscle: 'biceps', equipment: ['resistance-bands'] },
+  
+  // Lower Body
+  'squats': { name: 'Bodyweight Squats', type: 'bodyweight', muscle: 'quads', equipment: ['bodyweight'] },
+  'lunges': { name: 'Lunges', type: 'bodyweight', muscle: 'quads', equipment: ['bodyweight'] },
+  'jump-squats': { name: 'Jump Squats', type: 'bodyweight', muscle: 'quads', equipment: ['bodyweight'] },
+  'glute-bridges': { name: 'Glute Bridges', type: 'bodyweight', muscle: 'glutes', equipment: ['bodyweight'] },
+  'calf-raises': { name: 'Calf Raises', type: 'bodyweight', muscle: 'calves', equipment: ['bodyweight'] },
+  'goblet-squats': { name: 'Goblet Squats', type: 'weighted', muscle: 'quads', equipment: ['dumbbells'], baseWeight: 25 },
+  'dumbbell-lunges': { name: 'Dumbbell Lunges', type: 'weighted', muscle: 'quads', equipment: ['dumbbells'], baseWeight: 20 },
+  'dumbbell-rdl': { name: 'Dumbbell RDL', type: 'weighted', muscle: 'hamstrings', equipment: ['dumbbells'], baseWeight: 25 },
+  'barbell-squats': { name: 'Barbell Squats', type: 'weighted', muscle: 'quads', equipment: ['barbell'], baseWeight: 95 },
+  'barbell-rdl': { name: 'Barbell RDL', type: 'weighted', muscle: 'hamstrings', equipment: ['barbell'], baseWeight: 65 },
+  'leg-press': { name: 'Leg Press', type: 'machine', muscle: 'quads', equipment: ['gym-machines'], baseWeight: 100 },
+  'leg-curl': { name: 'Leg Curl', type: 'machine', muscle: 'hamstrings', equipment: ['gym-machines'], baseWeight: 40 },
+  'leg-extension': { name: 'Leg Extension', type: 'machine', muscle: 'quads', equipment: ['gym-machines'], baseWeight: 40 },
+  'band-squats': { name: 'Band Squats', type: 'band', muscle: 'quads', equipment: ['resistance-bands'] },
+  'band-glute-kickbacks': { name: 'Band Glute Kickbacks', type: 'band', muscle: 'glutes', equipment: ['resistance-bands'] },
+  
+  // Core
+  'plank': { name: 'Plank', type: 'bodyweight', muscle: 'core', equipment: ['bodyweight'], isIsometric: true },
+  'mountain-climbers': { name: 'Mountain Climbers', type: 'bodyweight', muscle: 'core', equipment: ['bodyweight'] },
+  'bicycle-crunches': { name: 'Bicycle Crunches', type: 'bodyweight', muscle: 'core', equipment: ['bodyweight'] },
+  'leg-raises': { name: 'Leg Raises', type: 'bodyweight', muscle: 'core', equipment: ['bodyweight'] },
+  'russian-twists': { name: 'Russian Twists', type: 'bodyweight', muscle: 'core', equipment: ['bodyweight'] },
+  'dead-bugs': { name: 'Dead Bugs', type: 'bodyweight', muscle: 'core', equipment: ['bodyweight'] },
+  'weighted-crunches': { name: 'Weighted Crunches', type: 'weighted', muscle: 'core', equipment: ['dumbbells'], baseWeight: 10 },
+  'cable-woodchops': { name: 'Cable Woodchops', type: 'machine', muscle: 'core', equipment: ['gym-machines'], baseWeight: 20 },
+  'band-pallof-press': { name: 'Pallof Press', type: 'band', muscle: 'core', equipment: ['resistance-bands'] },
+  
+  // Full Body / Cardio
+  'burpees': { name: 'Burpees', type: 'bodyweight', muscle: 'full', equipment: ['bodyweight'] },
+  'jumping-jacks': { name: 'Jumping Jacks', type: 'bodyweight', muscle: 'full', equipment: ['bodyweight'] },
+  'high-knees': { name: 'High Knees', type: 'bodyweight', muscle: 'full', equipment: ['bodyweight'] },
+  'box-jumps': { name: 'Box Jumps', type: 'bodyweight', muscle: 'full', equipment: ['bodyweight'] }
+};
 
-main { padding: 14px 18px 140px; }
-.page { animation: fadeUp .35s ease both; }
+const WORKOUT_TEMPLATES = {
+  'upper-push': {
+    title: 'Upper Body Push',
+    focus: ['chest', 'shoulders', 'triceps'],
+    exerciseCount: { beginner: 4, intermediate: 5, advanced: 6 }
+  },
+  'upper-pull': {
+    title: 'Upper Body Pull',
+    focus: ['back', 'biceps'],
+    exerciseCount: { beginner: 4, intermediate: 5, advanced: 6 }
+  },
+  'lower-body': {
+    title: 'Lower Body Power',
+    focus: ['quads', 'hamstrings', 'glutes', 'calves'],
+    exerciseCount: { beginner: 4, intermediate: 5, advanced: 6 }
+  },
+  'full-body': {
+    title: 'Full Body Blast',
+    focus: ['chest', 'back', 'quads', 'core'],
+    exerciseCount: { beginner: 5, intermediate: 6, advanced: 7 }
+  },
+  'core-cardio': {
+    title: 'Core & Cardio',
+    focus: ['core', 'full'],
+    exerciseCount: { beginner: 5, intermediate: 6, advanced: 7 }
+  },
+  'push-pull': {
+    title: 'Push Pull',
+    focus: ['chest', 'back', 'shoulders'],
+    exerciseCount: { beginner: 5, intermediate: 6, advanced: 7 }
+  }
+};
 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+// ===== State =====
+let state = {
+  currentStep: 1,
+  totalSteps: 6,
+  onboarding: {
+    goal: null,
+    level: null,
+    equipment: [],
+    days: 4,
+    duration: 45,
+    intensity: null
+  },
+  user: {
+    name: 'Anonymous',
+    theme: 'dark'
+  },
+  plan: {
+    startDate: null,
+    weeklyPlan: [],
+    customEdits: {}
+  },
+  progress: {
+    streak: 0,
+    totalWorkouts: 0,
+    lastWorkoutDate: null,
+    history: [],
+    personalRecords: {},
+    weeklyCompleted: 0
+  },
+  today: {
+    completedExercises: [],
+    exerciseWeights: {}
+  },
+  editingDay: null
+};
 
-/* ---------- Typography helpers ---------- */
-.title { font-family: 'Sora', 'Inter', sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
-.eyebrow { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; }
-.muted { color: var(--muted); }
-.xs { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
-.sm { font-size: 13px; }
+// ===== DOM Elements =====
+const elements = {
+  onboarding: document.getElementById('onboarding'),
+  mainApp: document.getElementById('main-app'),
+  steps: document.querySelectorAll('.step'),
+  progressFill: document.getElementById('onboarding-progress-fill'),
+  stepText: document.getElementById('onboarding-step-text'),
+  btnBack: document.getElementById('btn-back'),
+  btnNext: document.getElementById('btn-next'),
+  daysSlider: document.getElementById('days-slider'),
+  daysValue: document.getElementById('days-value'),
+  pages: document.querySelectorAll('.page'),
+  navItems: document.querySelectorAll('.nav-item'),
+  fab: document.getElementById('btn-fab'),
+  toast: document.getElementById('toast'),
+  toastMessage: document.querySelector('.toast-message'),
+  themeToggle: document.getElementById('theme-toggle'),
+  profileName: document.getElementById('profile-name'),
+  profileAvatar: document.getElementById('profile-avatar')
+};
 
-/* ---------- Cards / Glass ---------- */
-.card {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: 22px;
-  padding: 18px;
-  margin-bottom: 14px;
-  box-shadow: var(--shadow-sm);
-}
-.glass { backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
-
-.section-h { font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
-
-/* ---------- Topbar ---------- */
-.topbar {
-  display: flex; justify-content: space-between; align-items: flex-end;
-  padding: 18px 4px 18px;
-}
-.icon-btn {
-  width: 42px; height: 42px; border-radius: 14px;
-  border: 1px solid var(--card-border); background: var(--card);
-  color: var(--fg); font-size: 18px; cursor: pointer;
-  backdrop-filter: var(--glass-blur);
-  transition: transform .2s, background .2s;
-}
-.icon-btn:hover { transform: translateY(-1px); background: var(--accent-soft); }
-
-/* ---------- Buttons ---------- */
-.btn {
-  border: none; cursor: pointer;
-  padding: 14px 22px; border-radius: 16px;
-  font-weight: 600; font-size: 15px; font-family: inherit;
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  transition: transform .15s, box-shadow .2s, background .2s, opacity .2s;
-}
-.btn:active { transform: scale(0.97); }
-.btn.primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #fff; box-shadow: var(--accent-glow);
-}
-.btn.primary:hover { box-shadow: 0 12px 36px rgba(255,117,24,0.55); }
-.btn.ghost { background: var(--input-bg); color: var(--fg); }
-.btn.outline { background: transparent; color: var(--fg); border: 1px solid var(--card-border); }
-.btn.danger { background: var(--input-bg); color: var(--danger); border: 1px solid rgba(255,84,112,0.25); }
-.btn.wide { width: 100%; margin-bottom: 10px; }
-.btn.sm { padding: 9px 14px; font-size: 13px; border-radius: 12px; }
-
-/* =========================================================
-   ONBOARDING
-========================================================= */
-.onboarding {
-  min-height: 100vh; padding: 24px 20px 24px;
-  display: flex; flex-direction: column;
-}
-.onboard-wrap {
-  flex: 1; display: flex; flex-direction: column;
-  max-width: 560px; margin: 0 auto; width: 100%;
-}
-.onboard-head { padding-top: 12px; }
-.brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
-.logo {
-  width: 48px; height: 48px; border-radius: 14px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  display: grid; place-items: center;
-  font-family: 'Sora', sans-serif; font-weight: 800; color: #fff; font-size: 22px;
-  box-shadow: var(--accent-glow);
-}
-.brand-name { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; }
-.brand-tag { color: var(--muted); font-size: 13px; }
-
-.step-dots { display: flex; gap: 6px; margin-bottom: 18px; }
-.step-dots span {
-  flex: 1; height: 4px; border-radius: 4px;
-  background: var(--input-bg); transition: background .3s;
-}
-.step-dots span.active { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
-
-.onboard-body { flex: 1; padding: 20px 0; }
-.q-title { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.02em;}
-.q-sub { color: var(--muted); margin-bottom: 22px; font-size: 14px; }
-
-.option-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.option-grid.two { grid-template-columns: 1fr 1fr; }
-.option {
-  padding: 16px 18px; border-radius: 16px; cursor: pointer;
-  background: var(--card); border: 1.5px solid var(--card-border);
-  display: flex; align-items: center; gap: 14px;
-  transition: transform .15s, border-color .2s, background .2s;
-  font-weight: 600;
-}
-.option:hover { transform: translateY(-1px); }
-.option .ico { font-size: 22px; }
-.option.selected {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  box-shadow: 0 0 0 4px rgba(255,117,24,0.08);
-}
-
-.slider-wrap { padding: 10px 4px; }
-.slider-wrap input[type=range] {
-  -webkit-appearance: none; appearance: none;
-  width: 100%; height: 6px; border-radius: 6px;
-  background: var(--input-bg); outline: none;
-}
-.slider-wrap input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: var(--accent-glow); cursor: pointer; border: 3px solid var(--bg-solid);
-}
-.slider-val {
-  font-family: 'Sora', sans-serif; font-size: 44px; font-weight: 800;
-  text-align: center; margin: 14px 0; letter-spacing: -0.03em;
-}
-.slider-val small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 6px;}
-
-.onboard-foot {
-  display: flex; gap: 10px; padding-top: 12px;
-}
-.onboard-foot .btn { flex: 1; }
-
-/* =========================================================
-   TODAY
-========================================================= */
-.coach-card { display: flex; gap: 14px; align-items: center; }
-.coach-avatar {
-  width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
-  background: var(--accent-soft); color: var(--accent);
-  display: grid; place-items: center; font-weight: 800;
-}
-.coach-text { font-size: 14px; line-height: 1.45; margin-top: 2px; }
-
-.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stats-row .stat { padding: 14px; text-align: left; margin-bottom: 14px; }
-.stat-val { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; margin-top: 4px; letter-spacing: -0.02em;}
-.stat-val.sm { font-size: 14px; font-weight: 700; }
-
-.workout-card { padding: 22px; }
-.workout-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
-.workout-title {
-  font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800;
-  letter-spacing: -0.02em; margin: 4px 0;
+// ===== Initialization =====
+function init() {
+  loadState();
+  
+  if (state.plan.startDate) {
+    showMainApp();
+    updateTodayPage();
+    updatePlanPage();
+    updateProgressPage();
+    updateProfilePage();
+  }
+  
+  setupEventListeners();
+  applyTheme(state.user.theme);
 }
 
-.ring {
-  position: relative; width: 64px; height: 64px; flex-shrink: 0;
-  display: grid; place-items: center;
-}
-.ring svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-.ring .ring-bg { fill: none; stroke: var(--input-bg); stroke-width: 6; }
-.ring .ring-fg {
-  fill: none; stroke: url(#grad); stroke: var(--accent);
-  stroke-width: 6; stroke-linecap: round;
-  stroke-dasharray: 175.93; stroke-dashoffset: 175.93;
-  transition: stroke-dashoffset .5s ease;
-  filter: drop-shadow(0 0 6px rgba(255,117,24,0.5));
-}
-.ring span {
-  position: absolute; font-size: 12px; font-weight: 700; font-family: 'Sora', sans-serif;
-}
-.ring.big { width: 120px; height: 120px; }
-.ring.big .ring-bg, .ring.big .ring-fg { stroke-width: 8; }
-.ring.big .ring-fg { stroke-dasharray: 326.7; stroke-dashoffset: 326.7;}
-.ring.big span { font-size: 22px; }
-
-.weekly-ring-wrap { display: flex; align-items: center; gap: 24px; padding: 8px 0; }
-
-.exercise-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
-.ex-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px; border-radius: 14px;
-  background: var(--input-bg);
-  transition: background .2s, opacity .2s;
-}
-.ex-row.done { opacity: 0.5; }
-.ex-row.done .ex-name { text-decoration: line-through; }
-.ex-check {
-  width: 26px; height: 26px; border-radius: 8px;
-  border: 2px solid var(--card-border);
-  display: grid; place-items: center; flex-shrink: 0;
-  cursor: pointer; transition: all .2s;
-  background: transparent;
-}
-.ex-check.checked {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  border-color: transparent; color: #fff; font-size: 14px;
-}
-.ex-check.checked::after { content: "✓"; font-weight: 800; }
-.ex-info { flex: 1; min-width: 0; }
-.ex-name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
-.ex-meta { font-size: 12px; color: var(--muted); }
-.ex-weight {
-  width: 70px; padding: 8px 10px; border-radius: 10px;
-  border: 1px solid var(--card-border); background: var(--bg-solid);
-  color: var(--fg); font-size: 13px; font-weight: 600; text-align: center;
-  font-family: inherit;
-}
-.ex-weight:focus { outline: 2px solid var(--accent); }
-
-.workout-actions { display: flex; gap: 10px; }
-.workout-actions .btn { flex: 1; }
-
-/* =========================================================
-   PLAN
-========================================================= */
-.week-list { display: flex; flex-direction: column; gap: 12px; }
-.day-card {
-  display: flex; align-items: center; gap: 14px;
-  padding: 16px;
-}
-.day-card .day-tag {
-  width: 54px; flex-shrink: 0; text-align: center;
-  padding: 10px 0; border-radius: 12px;
-  background: var(--input-bg);
-  font-family: 'Sora', sans-serif; font-weight: 700;
-}
-.day-card .day-tag .d { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em;}
-.day-card .day-tag .n { font-size: 20px; }
-.day-card.today .day-tag {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #fff;
-}
-.day-card.today .day-tag .d { color: rgba(255,255,255,0.85); }
-.day-info { flex: 1; min-width: 0; }
-.day-info .t { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
-.day-info .m { font-size: 12px; color: var(--muted); }
-.day-status { font-size: 18px; }
-.day-status.done { color: var(--success); }
-.day-status.skip { color: var(--danger); }
-.day-status.rest { color: var(--muted); }
-.day-edit {
-  width: 36px; height: 36px; border-radius: 10px; border: none;
-  background: var(--input-bg); color: var(--fg); cursor: pointer;
-  font-size: 14px;
+function loadState() {
+  const saved = localStorage.getItem('fitforge_state');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      state = { ...state, ...parsed };
+    } catch (e) {
+      console.error('Failed to load state:', e);
+    }
+  }
 }
 
-/* =========================================================
-   PROGRESS
-========================================================= */
-.stat-big { padding: 18px; }
-.big-num {
-  font-family: 'Sora', sans-serif; font-size: 36px; font-weight: 800;
-  margin-top: 4px; letter-spacing: -0.03em;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-.big-num.sm { font-size: 22px; }
-.big-num .unit { font-size: 22px; margin-left: 6px; -webkit-text-fill-color: initial; }
-
-.pr-list, .history-list { display: flex; flex-direction: column; gap: 8px; }
-.pr-row, .hist-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 14px; border-radius: 12px; background: var(--input-bg);
-}
-.pr-row .name, .hist-row .name { font-weight: 600; font-size: 14px; }
-.pr-row .val { color: var(--accent); font-weight: 700; font-family: 'Sora', sans-serif; }
-.hist-row .date { color: var(--muted); font-size: 12px; }
-
-/* =========================================================
-   PROFILE
-========================================================= */
-.profile-card { display: flex; align-items: center; gap: 16px; }
-.avatar {
-  width: 64px; height: 64px; border-radius: 20px; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  display: grid; place-items: center; color: #fff;
-  font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 800;
-  box-shadow: var(--accent-glow);
-}
-.profile-info { flex: 1; min-width: 0; }
-.name-input {
-  width: 100%; background: transparent; border: none; outline: none;
-  color: var(--fg); font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800;
-  letter-spacing: -0.02em;
-}
-.theme-row { display: flex; gap: 10px; }
-.theme-pill {
-  flex: 1; padding: 14px; border-radius: 14px; cursor: pointer;
-  background: var(--input-bg); border: 1.5px solid transparent;
-  color: var(--fg); font-family: inherit; font-weight: 600; font-size: 14px;
-  transition: all .2s;
-}
-.theme-pill.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
-
-.summary-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 0; border-bottom: 1px solid var(--card-border);
-  font-size: 14px;
-}
-.summary-row:last-child { border-bottom: none; }
-.summary-row span:last-child { font-weight: 600; }
-
-/* =========================================================
-   BOTTOM NAV with center cutout
-========================================================= */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-  width: 100%; max-width: 720px;
-  height: 80px; padding-bottom: env(safe-area-inset-bottom);
-  display: flex; justify-content: space-around; align-items: stretch;
-  z-index: 50;
-}
-.nav-bg {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  pointer-events: none;
-  fill: var(--nav-bg);
-  filter: drop-shadow(0 -8px 24px rgba(0,0,0,0.2));
-}
-[data-theme="dark"] .nav-bg { fill: rgba(14,14,18,0.92); }
-[data-theme="light"] .nav-bg { fill: rgba(255,255,255,0.92); }
-
-.nav-item {
-  flex: 1; background: transparent; border: none; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 4px; color: var(--muted); font-family: inherit; font-size: 11px; font-weight: 600;
-  position: relative; z-index: 2;
-  transition: color .2s, transform .2s;
-}
-.nav-item .nav-ico { font-size: 18px; transition: transform .2s; }
-.nav-item.active { color: var(--accent); }
-.nav-item.active .nav-ico { transform: translateY(-2px) scale(1.1); }
-.nav-item:nth-child(3), .nav-item:nth-child(4) { /* spacing handled by FAB */ }
-
-.fab {
-  position: absolute; left: 50%; top: -24px; transform: translateX(-50%);
-  width: 60px; height: 60px; border-radius: 50%; border: none;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #fff; font-size: 30px; font-weight: 300; line-height: 1;
-  cursor: pointer; box-shadow: var(--accent-glow);
-  z-index: 3;
-  transition: transform .2s, box-shadow .2s;
-}
-.fab:hover { transform: translateX(-50%) scale(1.05); }
-.fab:active { transform: translateX(-50%) scale(0.95); }
-
-/* =========================================================
-   MODALS
-========================================================= */
-.modal-bg {
-  position: fixed; inset: 0; z-index: 100;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(8px);
-  display: grid; place-items: center;
-  padding: 18px;
-  animation: fadeIn .2s;
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.modal {
-  width: 100%; max-width: 460px; padding: 24px;
-  border-radius: 24px;
-  background: var(--bg-solid);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--shadow-lg);
-  animation: popIn .3s cubic-bezier(.2,.9,.3,1.4);
-  max-height: 90vh; overflow-y: auto;
-}
-.modal.big { max-width: 560px; }
-@keyframes popIn { from { opacity: 0; transform: translateY(20px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-.modal h3 { font-family: 'Sora', sans-serif; margin-bottom: 6px; font-weight: 800; }
-.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.modal-body { margin-bottom: 16px; }
-.modal-foot { display: flex; gap: 10px; margin-top: 16px; }
-.modal-foot .btn { flex: 1; }
-
-.feedback-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
-.fb-btn {
-  background: var(--input-bg); border: 1.5px solid transparent;
-  color: var(--fg); padding: 16px 8px; border-radius: 14px;
-  font-family: inherit; font-weight: 600; font-size: 12px;
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  cursor: pointer; transition: all .2s;
-}
-.fb-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
-.fb-btn span { font-size: 12px; }
-
-.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-.field span { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
-.field input {
-  background: var(--input-bg); border: 1px solid var(--card-border);
-  border-radius: 12px; padding: 12px 14px;
-  color: var(--fg); font-family: inherit; font-size: 14px;
-}
-.field input:focus { outline: 2px solid var(--accent); }
-
-.ex-edit-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
-.ex-edit-row {
-  background: var(--input-bg); border-radius: 14px; padding: 12px;
-  display: grid; grid-template-columns: 1fr auto; gap: 8px;
-}
-.ex-edit-row input {
-  background: transparent; border: none; color: var(--fg);
-  font-family: inherit; font-size: 14px; padding: 4px;
-}
-.ex-edit-row input:focus { outline: none; }
-.ex-edit-row .ex-name-input { font-weight: 700; grid-column: 1; }
-.ex-edit-row .del-ex {
-  background: transparent; border: none; color: var(--danger);
-  cursor: pointer; font-size: 18px; padding: 4px 8px;
-  grid-row: 1; grid-column: 2;
-}
-.ex-edit-row .triple {
-  grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
-}
-.ex-edit-row .triple input {
-  background: var(--bg-solid); border: 1px solid var(--card-border);
-  border-radius: 8px; padding: 8px; text-align: center; font-size: 12px;
+function saveState() {
+  localStorage.setItem('fitforge_state', JSON.stringify(state));
 }
 
-/* ---------- Toast ---------- */
-.toast {
-  position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%);
-  background: var(--bg-solid); border: 1px solid var(--card-border);
-  color: var(--fg); padding: 14px 22px; border-radius: 14px;
-  font-weight: 600; font-size: 14px; z-index: 200;
-  box-shadow: var(--shadow-lg);
-  animation: toastIn .3s;
+// ===== Event Listeners =====
+function setupEventListeners() {
+  // Onboarding navigation
+  elements.btnNext.addEventListener('click', handleNext);
+  elements.btnBack.addEventListener('click', handleBack);
+  
+  // Option cards (single select)
+  document.querySelectorAll('.option-card:not(.multi-select)').forEach(card => {
+    card.addEventListener('click', handleOptionSelect);
+  });
+  
+  // Multi-select cards
+  document.querySelectorAll('.option-card.multi-select').forEach(card => {
+    card.addEventListener('click', handleMultiSelect);
+  });
+  
+  // Days slider
+  elements.daysSlider?.addEventListener('input', handleDaysChange);
+  
+  // Navigation
+  elements.navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const page = item.dataset.page;
+      if (page) navigateTo(page);
+    });
+  });
+  
+  // FAB
+  elements.fab.addEventListener('click', () => showModal('modal-plan-builder'));
+  
+  // Theme toggle
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleThemeChange(btn.dataset.theme));
+  });
+  
+  // Profile name
+  elements.profileName.addEventListener('change', handleNameChange);
+  elements.profileName.addEventListener('blur', handleNameChange);
+  
+  // Reset button
+  document.getElementById('btn-reset')?.addEventListener('click', () => showModal('modal-reset'));
+  document.getElementById('btn-cancel-reset')?.addEventListener('click', () => hideModal('modal-reset'));
+  document.getElementById('btn-confirm-reset')?.addEventListener('click', handleReset);
+  
+  // Regenerate button
+  document.getElementById('btn-regenerate')?.addEventListener('click', () => showModal('modal-regenerate'));
+  document.getElementById('btn-cancel-regenerate')?.addEventListener('click', () => hideModal('modal-regenerate'));
+  document.getElementById('btn-confirm-regenerate')?.addEventListener('click', handleRegenerate);
+  
+  // Complete workout
+  document.getElementById('btn-complete-workout')?.addEventListener('click', handleCompleteWorkout);
+  document.getElementById('btn-skip-workout')?.addEventListener('click', handleSkipWorkout);
+  
+  // Feedback modal
+  document.querySelectorAll('.feedback-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleFeedback(btn.dataset.feedback));
+  });
+  
+  // Edit modal
+  document.getElementById('btn-close-edit')?.addEventListener('click', () => hideModal('modal-edit'));
+  document.getElementById('btn-cancel-edit')?.addEventListener('click', () => hideModal('modal-edit'));
+  document.getElementById('btn-save-edit')?.addEventListener('click', handleSaveEdit);
+  document.getElementById('btn-add-exercise')?.addEventListener('click', handleAddExercise);
+  
+  // Plan builder modal
+  document.getElementById('btn-close-builder')?.addEventListener('click', () => hideModal('modal-plan-builder'));
+  document.getElementById('builder-regenerate')?.addEventListener('click', () => {
+    hideModal('modal-plan-builder');
+    showModal('modal-regenerate');
+  });
+  document.getElementById('builder-settings')?.addEventListener('click', () => {
+    hideModal('modal-plan-builder');
+    showToast('Coming soon: Update your fitness preferences');
+  });
+  
+  // Modal overlays
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', () => {
+      const modal = overlay.closest('.modal');
+      if (modal) hideModal(modal.id);
+    });
+  });
 }
-@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
-/* ---------- Responsive ---------- */
-@media (min-width: 720px) {
-  .title { font-size: 36px; }
-  main { padding: 24px 28px 140px; }
+// ===== Onboarding =====
+function handleOptionSelect(e) {
+  const card = e.currentTarget;
+  const step = card.closest('.step');
+  const value = card.dataset.value;
+  
+  // Remove selection from siblings
+  step.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  
+  // Update state based on step
+  const stepNum = parseInt(step.dataset.step);
+  switch (stepNum) {
+    case 1: state.onboarding.goal = value; break;
+    case 2: state.onboarding.level = value; break;
+    case 5: state.onboarding.duration = parseInt(value); break;
+    case 6: state.onboarding.intensity = value; break;
+  }
+  
+  updateNextButton();
 }
 
-/* ---------- Scrollbar ---------- */
-::-webkit-scrollbar { width: 8px; height: 8px;}
-::-webkit-scrollbar-thumb { background: var(--input-bg); border-radius: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
+function handleMultiSelect(e) {
+  const card = e.currentTarget;
+  const value = card.dataset.value;
+  
+  card.classList.toggle('selected');
+  
+  if (card.classList.contains('selected')) {
+    if (!state.onboarding.equipment.includes(value)) {
+      state.onboarding.equipment.push(value);
+    }
+  } else {
+    state.onboarding.equipment = state.onboarding.equipment.filter(eq => eq !== value);
+  }
+  
+  updateNextButton();
+}
+
+function handleDaysChange() {
+  const value = parseInt(elements.daysSlider.value);
+  state.onboarding.days = value;
+  elements.daysValue.textContent = `${value} days`;
+}
+
+function updateNextButton() {
+  const step = state.currentStep;
+  let isValid = false;
+  
+  switch (step) {
+    case 1: isValid = !!state.onboarding.goal; break;
+    case 2: isValid = !!state.onboarding.level; break;
+    case 3: isValid = state.onboarding.equipment.length > 0; break;
+    case 4: isValid = true; break;
+    case 5: isValid = !!state.onboarding.duration; break;
+    case 6: isValid = !!state.onboarding.intensity; break;
+  }
+  
+  elements.btnNext.disabled = !isValid;
+  elements.btnNext.textContent = step === state.totalSteps ? 'Generate Plan' : 'Continue';
+}
+
+function handleNext() {
+  if (state.currentStep < state.totalSteps) {
+    state.currentStep++;
+    updateOnboardingUI();
+  } else {
+    generatePlan();
+    showMainApp();
+  }
+}
+
+function handleBack() {
+  if (state.currentStep > 1) {
+    state.currentStep--;
+    updateOnboardingUI();
+  }
+}
+
+function updateOnboardingUI() {
+  // Update steps visibility
+  elements.steps.forEach(step => {
+    step.classList.remove('active');
+    if (parseInt(step.dataset.step) === state.currentStep) {
+      step.classList.add('active');
+    }
+  });
+  
+  // Update progress
+  const progress = (state.currentStep / state.totalSteps) * 100;
+  elements.progressFill.style.width = `${progress}%`;
+  elements.stepText.textContent = `Step ${state.currentStep} of ${state.totalSteps}`;
+  
+  // Update back button visibility
+  elements.btnBack.style.visibility = state.currentStep > 1 ? 'visible' : 'hidden';
+  
+  updateNextButton();
+}
+
+// ===== Plan Generation =====
+function generatePlan() {
+  state.plan.startDate = new Date().toISOString();
+  state.plan.weeklyPlan = [];
+  state.progress.weeklyCompleted = 0;
+  state.today.completedExercises = [];
+  state.today.exerciseWeights = {};
+  
+  const workoutDays = getWorkoutDaysForWeek();
+  const workoutTypes = getWorkoutSplit();
+  
+  for (let i = 0; i < 7; i++) {
+    const dayOfWeek = (new Date().getDay() + i) % 7;
+    const isWorkoutDay = workoutDays.includes(i);
+    
+    if (isWorkoutDay) {
+      const workoutIndex = workoutDays.indexOf(i);
+      const template = workoutTypes[workoutIndex % workoutTypes.length];
+      const workout = generateWorkout(template);
+      
+      state.plan.weeklyPlan.push({
+        day: i,
+        dayOfWeek,
+        isRest: false,
+        workout,
+        status: 'pending' // pending, completed, skipped
+      });
+    } else {
+      state.plan.weeklyPlan.push({
+        day: i,
+        dayOfWeek,
+        isRest: true,
+        status: 'rest'
+      });
+    }
+  }
+  
+  saveState();
+}
+
+function getWorkoutDaysForWeek() {
+  const days = state.onboarding.days;
+  const patterns = {
+    2: [1, 4], // Mon, Thu
+    3: [1, 3, 5], // Mon, Wed, Fri
+    4: [1, 2, 4, 5], // Mon, Tue, Thu, Fri
+    5: [1, 2, 3, 4, 5], // Mon-Fri
+    6: [1, 2, 3, 4, 5, 6] // Mon-Sat
+  };
+  return patterns[days] || patterns[4];
+}
+
+function getWorkoutSplit() {
+  const days = state.onboarding.days;
+  const goal = state.onboarding.goal;
+  
+  if (days <= 3) {
+    return ['full-body', 'full-body', 'full-body'];
+  } else if (days === 4) {
+    return ['upper-push', 'lower-body', 'upper-pull', 'core-cardio'];
+  } else {
+    return ['upper-push', 'lower-body', 'upper-pull', 'core-cardio', 'full-body', 'push-pull'];
+  }
+}
+
+function generateWorkout(templateKey) {
+  const template = WORKOUT_TEMPLATES[templateKey];
+  const level = state.onboarding.level;
+  const equipment = state.onboarding.equipment;
+  const duration = state.onboarding.duration;
+  const intensity = state.onboarding.intensity;
+  
+  const exerciseCount = template.exerciseCount[level];
+  const exercises = [];
+  const usedExercises = new Set();
+  
+  // Get available exercises
+  const availableExercises = Object.entries(EXERCISE_DATABASE).filter(([key, ex]) => {
+    const hasEquipment = ex.equipment.some(eq => equipment.includes(eq));
+    const matchesFocus = template.focus.includes(ex.muscle);
+    return hasEquipment && matchesFocus;
+  });
+  
+  // Shuffle and pick exercises
+  const shuffled = availableExercises.sort(() => Math.random() - 0.5);
+  
+  for (const [key, exercise] of shuffled) {
+    if (exercises.length >= exerciseCount) break;
+    if (usedExercises.has(exercise.muscle)) continue;
+    
+    usedExercises.add(exercise.muscle);
+    
+    const { sets, reps, rest } = getExerciseParams(exercise, level, intensity);
+    const weight = calculateRecommendedWeight(exercise, level);
+    
+    exercises.push({
+      id: key,
+      name: exercise.name,
+      sets,
+      reps,
+      rest,
+      recommendedWeight: weight,
+      type: exercise.type,
+      isIsometric: exercise.isIsometric || false
+    });
+  }
+  
+  // If we need more exercises, allow duplicates from different muscles
+  if (exercises.length < exerciseCount) {
+    for (const [key, exercise] of shuffled) {
+      if (exercises.length >= exerciseCount) break;
+      if (exercises.find(e => e.id === key)) continue;
+      
+      const { sets, reps, rest } = getExerciseParams(exercise, level, intensity);
+      const weight = calculateRecommendedWeight(exercise, level);
+      
+      exercises.push({
+        id: key,
+        name: exercise.name,
+        sets,
+        reps,
+        rest,
+        recommendedWeight: weight,
+        type: exercise.type,
+        isIsometric: exercise.isIsometric || false
+      });
+    }
+  }
+  
+  return {
+    title: template.title,
+    duration: duration,
+    exercises
+  };
+}
+
+function getExerciseParams(exercise, level, intensity) {
+  const baseParams = {
+    beginner: { sets: 3, reps: 10, rest: 90 },
+    intermediate: { sets: 4, reps: 12, rest: 60 },
+    advanced: { sets: 4, reps: 15, rest: 45 }
+  };
+  
+  const intensityMod = {
+    easy: { setsMod: -1, repsMod: -2, restMod: 30 },
+    moderate: { setsMod: 0, repsMod: 0, restMod: 0 },
+    hard: { setsMod: 1, repsMod: 3, restMod: -15 }
+  };
+  
+  const base = baseParams[level];
+  const mod = intensityMod[intensity];
+  
+  let reps = base.reps + mod.repsMod;
+  if (exercise.isIsometric) {
+    reps = base.reps * 3; // Convert to seconds for plank
+  }
+  
+  return {
+    sets: Math.max(2, base.sets + mod.setsMod),
+    reps: Math.max(6, reps),
+    rest: Math.max(30, base.rest + mod.restMod)
+  };
+}
+
+function calculateRecommendedWeight(exercise, level) {
+  if (!exercise.baseWeight) return null;
+  
+  const levelMod = { beginner: 0.7, intermediate: 1, advanced: 1.3 };
+  const progressMod = getProgressionModifier();
+  
+  return Math.round(exercise.baseWeight * levelMod[level] * progressMod / 5) * 5;
+}
+
+function getProgressionModifier() {
+  if (!state.plan.startDate) return 1;
+  
+  const startDate = new Date(state.plan.startDate);
+  const now = new Date();
+  const weeksPassed = Math.floor((now - startDate) / (7 * 24 * 60 * 60 * 1000));
+  
+  // Progressive overload: 2.5% increase every 2 weeks
+  const progressionCycles = Math.floor(weeksPassed / 2);
+  return 1 + (progressionCycles * 0.025);
+}
+
+function getTrainingWeek() {
+  if (!state.plan.startDate) return 1;
+  
+  const startDate = new Date(state.plan.startDate);
+  const now = new Date();
+  return Math.floor((now - startDate) / (7 * 24 * 60 * 60 * 1000)) + 1;
+}
+
+function getCurrentPhase() {
+  const week = getTrainingWeek();
+  
+  for (const phase of PHASES) {
+    if (week >= phase.weeks[0] && week <= phase.weeks[1]) {
+      return phase;
+    }
+  }
+  
+  return PHASES[PHASES.length - 1];
+}
+
+function getDaysUntilNextProgression() {
+  if (!state.plan.startDate) return 14;
+  
+  const startDate = new Date(state.plan.startDate);
+  const now = new Date();
+  const daysPassed = Math.floor((now - startDate) / (24 * 60 * 60 * 1000));
+  const daysInCycle = daysPassed % 14;
+  
+  return 14 - daysInCycle;
+}
+
+// ===== Main App =====
+function showMainApp() {
+  elements.onboarding.classList.add('hidden');
+  elements.mainApp.classList.remove('hidden');
+  updateTodayPage();
+  updatePlanPage();
+  updateProgressPage();
+  updateProfilePage();
+}
+
+function navigateTo(page) {
+  elements.pages.forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  
+  elements.navItems.forEach(item => {
+    item.classList.remove('active');
+    if (item.dataset.page === page) {
+      item.classList.add('active');
+    }
+  });
+  
+  // Refresh page data
+  if (page === 'today') updateTodayPage();
+  if (page === 'plan') updatePlanPage();
+  if (page === 'progress') updateProgressPage();
+  if (page === 'profile') updateProfilePage();
+}
+
+// ===== Today Page =====
+function updateTodayPage() {
+  // Update date
+  const today = new Date();
+  document.getElementById('today-date').textContent = today.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  // Update stats
+  const phase = getCurrentPhase();
+  document.getElementById('training-week').textContent = `Week ${getTrainingWeek()}`;
+  document.getElementById('current-phase').textContent = phase.name;
+  document.getElementById('next-overload').textContent = `${getDaysUntilNextProgression()} days`;
+  
+  // Update coach notes
+  const notes = COACH_NOTES[state.onboarding.goal] || COACH_NOTES['stay-healthy'];
+  document.getElementById('coach-notes').textContent = notes[Math.floor(Math.random() * notes.length)];
+  
+  // Get today's workout
+  const todayIndex = getTodayWorkoutIndex();
+  const todayPlan = state.plan.weeklyPlan[todayIndex];
+  
+  if (todayPlan && !todayPlan.isRest && todayPlan.status !== 'completed' && todayPlan.status !== 'skipped') {
+    document.getElementById('today-workout-card').classList.remove('hidden');
+    document.getElementById('rest-day-card').classList.add('hidden');
+    
+    const workout = state.plan.customEdits[todayIndex] || todayPlan.workout;
+    
+    document.getElementById('workout-title').textContent = workout.title;
+    document.getElementById('workout-duration').textContent = `⏱️ ${workout.duration} min`;
+    document.getElementById('workout-exercise-count').textContent = `${workout.exercises.length} exercises`;
+    
+    renderExerciseList(workout.exercises);
+    updateWorkoutProgress();
+  } else {
+    document.getElementById('today-workout-card').classList.add('hidden');
+    document.getElementById('rest-day-card').classList.remove('hidden');
+    
+    if (todayPlan?.status === 'completed') {
+      document.querySelector('.rest-day-card .rest-icon').textContent = '✅';
+      document.querySelector('.rest-day-card h2').textContent = 'Workout Complete!';
+      document.querySelector('.rest-day-card p').textContent = 'Great job today! Rest up and come back stronger tomorrow.';
+    } else if (todayPlan?.status === 'skipped') {
+      document.querySelector('.rest-day-card .rest-icon').textContent = '⏭️';
+      document.querySelector('.rest-day-card h2').textContent = 'Workout Skipped';
+      document.querySelector('.rest-day-card p').textContent = 'No worries! Everyone needs a break sometimes. Get back at it tomorrow!';
+    } else {
+      document.querySelector('.rest-day-card .rest-icon').textContent = '😴';
+      document.querySelector('.rest-day-card h2').textContent = 'Rest Day';
+      document.querySelector('.rest-day-card p').textContent = 'Recovery is just as important as training. Stay hydrated and get some good sleep!';
+    }
+  }
+}
+
+function getTodayWorkoutIndex() {
+  const today = new Date().getDay();
+  const startDay = new Date(state.plan.startDate).getDay();
+  
+  // Find today's position in the weekly plan
+  for (let i = 0; i < state.plan.weeklyPlan.length; i++) {
+    if (state.plan.weeklyPlan[i].dayOfWeek === today) {
+      return i;
+    }
+  }
+  
+  return 0;
+}
+
+function renderExerciseList(exercises) {
+  const container = document.getElementById('exercise-list');
+  container.innerHTML = '';
+  
+  exercises.forEach((exercise, index) => {
+    const isCompleted = state.today.completedExercises.includes(index);
+    const savedWeight = state.today.exerciseWeights[index];
+    
+    const item = document.createElement('div');
+    item.className = `exercise-item ${isCompleted ? 'completed' : ''}`;
+    item.innerHTML = `
+      <div class="exercise-checkbox ${isCompleted ? 'checked' : ''}" data-index="${index}"></div>
+      <div class="exercise-info">
+        <div class="exercise-name">${exercise.name}</div>
+        <div class="exercise-details">
+          <span>${exercise.sets} sets</span>
+          <span>${exercise.isIsometric ? `${exercise.reps}s hold` : `${exercise.reps} reps`}</span>
+          <span>${exercise.rest}s rest</span>
+        </div>
+      </div>
+      ${exercise.recommendedWeight ? `
+        <input type="number" 
+          class="exercise-weight-input" 
+          placeholder="${exercise.recommendedWeight} lb"
+          value="${savedWeight || ''}"
+          data-index="${index}"
+          data-recommended="${exercise.recommendedWeight}">
+      ` : ''}
+    `;
+    
+    container.appendChild(item);
+    
+    // Add event listeners
+    item.querySelector('.exercise-checkbox').addEventListener('click', () => toggleExercise(index));
+    
+    const weightInput = item.querySelector('.exercise-weight-input');
+    if (weightInput) {
+      weightInput.addEventListener('change', (e) => {
+        state.today.exerciseWeights[index] = parseInt(e.target.value) || null;
+        saveState();
+      });
+    }
+  });
+}
+
+function toggleExercise(index) {
+  if (state.today.completedExercises.includes(index)) {
+    state.today.completedExercises = state.today.completedExercises.filter(i => i !== index);
+  } else {
+    state.today.completedExercises.push(index);
+  }
+  
+  saveState();
+  updateTodayPage();
+}
+
+function updateWorkoutProgress() {
+  const todayIndex = getTodayWorkoutIndex();
+  const todayPlan = state.plan.weeklyPlan[todayIndex];
+  if (!todayPlan || todayPlan.isRest) return;
+  
+  const workout = state.plan.customEdits[todayIndex] || todayPlan.workout;
+  const total = workout.exercises.length;
+  const completed = state.today.completedExercises.length;
+  const percentage = Math.round((completed / total) * 100);
+  
+  document.getElementById('ring-fill').setAttribute('stroke-dasharray', `${percentage}, 100`);
+  document.getElementById('ring-text').textContent = `${percentage}%`;
+  
+  // Enable complete button when all exercises are done
+  document.getElementById('btn-complete-workout').disabled = completed < total;
+}
+
+function handleCompleteWorkout() {
+  const todayIndex = getTodayWorkoutIndex();
+  state.plan.weeklyPlan[todayIndex].status = 'completed';
+  state.progress.totalWorkouts++;
+  state.progress.weeklyCompleted++;
+  
+  // Update streak
+  const lastDate = state.progress.lastWorkoutDate ? new Date(state.progress.lastWorkoutDate) : null;
+  const today = new Date();
+  
+  if (lastDate) {
+    const daysDiff = Math.floor((today - lastDate) / (24 * 60 * 60 * 1000));
+    if (daysDiff <= 1) {
+      state.progress.streak++;
+    } else {
+      state.progress.streak = 1;
+    }
+  } else {
+    state.progress.streak = 1;
+  }
+  
+  state.progress.lastWorkoutDate = today.toISOString();
+  
+  // Update personal records
+  Object.entries(state.today.exerciseWeights).forEach(([index, weight]) => {
+    if (!weight) return;
+    
+    const todayPlan = state.plan.weeklyPlan[todayIndex];
+    const workout = state.plan.customEdits[todayIndex] || todayPlan.workout;
+    const exercise = workout.exercises[index];
+    
+    if (!state.progress.personalRecords[exercise.id] || weight > state.progress.personalRecords[exercise.id]) {
+      state.progress.personalRecords[exercise.id] = weight;
+    }
+  });
+  
+  // Add to history
+  const workout = state.plan.customEdits[todayIndex] || state.plan.weeklyPlan[todayIndex].workout;
+  state.progress.history.unshift({
+    date: today.toISOString(),
+    workout: workout.title,
+    status: 'completed'
+  });
+  
+  // Keep only last 20 entries
+  state.progress.history = state.progress.history.slice(0, 20);
+  
+  // Reset today's state
+  state.today.completedExercises = [];
+  state.today.exerciseWeights = {};
+  
+  saveState();
+  
+  // Show feedback modal
+  showModal('modal-feedback');
+}
+
+function handleSkipWorkout() {
+  const todayIndex = getTodayWorkoutIndex();
+  state.plan.weeklyPlan[todayIndex].status = 'skipped';
+  
+  // Reset streak
+  state.progress.streak = 0;
+  
+  // Add to history
+  const workout = state.plan.customEdits[todayIndex] || state.plan.weeklyPlan[todayIndex].workout;
+  state.progress.history.unshift({
+    date: new Date().toISOString(),
+    workout: workout.title,
+    status: 'skipped'
+  });
+  
+  state.progress.history = state.progress.history.slice(0, 20);
+  
+  state.today.completedExercises = [];
+  state.today.exerciseWeights = {};
+  
+  saveState();
+  updateTodayPage();
+  showToast('Workout skipped. Rest up! 💪');
+}
+
+function handleFeedback(feedback) {
+  // Store feedback for future adjustments
+  const todayIndex = getTodayWorkoutIndex();
+  state.plan.weeklyPlan[todayIndex].feedback = feedback;
+  
+  // Adjust future difficulty recommendations
+  if (feedback === 'too-easy') {
+    showToast('Got it! We\'ll increase the challenge next time 💪');
+  } else if (feedback === 'too-hard') {
+    showToast('Noted! We\'ll dial it back a bit 👍');
+  } else {
+    showToast('Perfect! Keep up the great work! 🔥');
+  }
+  
+  saveState();
+  hideModal('modal-feedback');
+  updateTodayPage();
+}
+
+// ===== Plan Page =====
+function updatePlanPage() {
+  const container = document.getElementById('week-grid');
+  container.innerHTML = '';
+  
+  const today = new Date();
+  const todayDay = today.getDay();
+  
+  state.plan.weeklyPlan.forEach((day, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - getTodayWorkoutIndex() + index);
+    
+    const isToday = date.toDateString() === today.toDateString();
+    const workout = state.plan.customEdits[index] || day.workout;
+    
+    const card = document.createElement('div');
+    card.className = 'glass-card day-card';
+    
+    let statusHtml = '';
+    if (day.isRest) {
+      statusHtml = '<span class="day-status rest">Rest</span>';
+    } else if (day.status === 'completed') {
+      statusHtml = '<span class="day-status completed">Done</span>';
+    } else if (day.status === 'skipped') {
+      statusHtml = '<span class="day-status skipped">Skipped</span>';
+    }
+    
+    card.innerHTML = `
+      <div class="day-indicator ${isToday ? 'today' : ''}">
+        <span class="day-name">${SHORT_DAYS[day.dayOfWeek]}</span>
+        <span class="day-number">${date.getDate()}</span>
+      </div>
+      <div class="day-content">
+        <div class="day-title">${day.isRest ? 'Rest Day' : workout.title}</div>
+        <div class="day-meta">${day.isRest ? 'Recovery & regeneration' : `${workout.duration} min · ${workout.exercises.length} exercises`}</div>
+      </div>
+      ${statusHtml}
+      ${!day.isRest ? `
+        <button class="btn-icon day-edit-btn" data-day="${index}" title="Edit workout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+      ` : ''}
+    `;
+    
+    container.appendChild(card);
+    
+    // Add edit button listener
+    const editBtn = card.querySelector('.day-edit-btn');
+    if (editBtn) {
+      editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openEditModal(index);
+      });
+    }
+  });
+}
+
+function openEditModal(dayIndex) {
+  state.editingDay = dayIndex;
+  const day = state.plan.weeklyPlan[dayIndex];
+  const workout = state.plan.customEdits[dayIndex] || day.workout;
+  
+  document.getElementById('edit-title').value = workout.title;
+  document.getElementById('edit-duration').value = workout.duration;
+  
+  renderExerciseEditor(workout.exercises);
+  showModal('modal-edit');
+}
+
+function renderExerciseEditor(exercises) {
+  const container = document.getElementById('exercise-editor');
+  container.innerHTML = '';
+  
+  exercises.forEach((exercise, index) => {
+    const item = document.createElement('div');
+    item.className = 'edit-exercise-item';
+    item.innerHTML = `
+      <div class="edit-exercise-header">
+        <input type="text" value="${exercise.name}" data-field="name" data-index="${index}">
+        <button class="btn-icon btn-delete-exercise" data-index="${index}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18"/>
+            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="edit-exercise-details">
+        <input type="number" class="edit-detail-input" value="${exercise.sets}" placeholder="Sets" data-field="sets" data-index="${index}">
+        <input type="number" class="edit-detail-input" value="${exercise.reps}" placeholder="Reps" data-field="reps" data-index="${index}">
+        <input type="number" class="edit-detail-input" value="${exercise.rest}" placeholder="Rest (s)" data-field="rest" data-index="${index}">
+      </div>
+    `;
+    
+    container.appendChild(item);
+    
+    // Delete button listener
+    item.querySelector('.btn-delete-exercise').addEventListener('click', () => {
+      if (exercises.length > 1) {
+        exercises.splice(index, 1);
+        renderExerciseEditor(exercises);
+      } else {
+        showToast('Workout must have at least one exercise');
+      }
+    });
+  });
+}
+
+function handleAddExercise() {
+  const dayIndex = state.editingDay;
+  const day = state.plan.weeklyPlan[dayIndex];
+  const workout = state.plan.customEdits[dayIndex] || { ...day.workout, exercises: [...day.workout.exercises] };
+  
+  workout.exercises.push({
+    id: `custom-${Date.now()}`,
+    name: 'New Exercise',
+    sets: 3,
+    reps: 10,
+    rest: 60,
+    recommendedWeight: null,
+    type: 'custom'
+  });
+  
+  state.plan.customEdits[dayIndex] = workout;
+  renderExerciseEditor(workout.exercises);
+}
+
+function handleSaveEdit() {
+  const dayIndex = state.editingDay;
+  const day = state.plan.weeklyPlan[dayIndex];
+  const workout = state.plan.customEdits[dayIndex] || { ...day.workout, exercises: [...day.workout.exercises] };
+  
+  // Update workout details
+  workout.title = document.getElementById('edit-title').value;
+  workout.duration = parseInt(document.getElementById('edit-duration').value);
+  
+  // Update exercises
+  document.querySelectorAll('.edit-exercise-item').forEach((item, index) => {
+    const nameInput = item.querySelector('input[data-field="name"]');
+    const setsInput = item.querySelector('input[data-field="sets"]');
+    const repsInput = item.querySelector('input[data-field="reps"]');
+    const restInput = item.querySelector('input[data-field="rest"]');
+    
+    if (workout.exercises[index]) {
+      workout.exercises[index].name = nameInput.value;
+      workout.exercises[index].sets = parseInt(setsInput.value);
+      workout.exercises[index].reps = parseInt(repsInput.value);
+      workout.exercises[index].rest = parseInt(restInput.value);
+    }
+  });
+  
+  state.plan.customEdits[dayIndex] = workout;
+  
+  saveState();
+  hideModal('modal-edit');
+  updatePlanPage();
+  updateTodayPage();
+  showToast('Workout updated! 💪');
+}
+
+function handleRegenerate() {
+  state.plan.customEdits = {};
+  generatePlan();
+  hideModal('modal-regenerate');
+  updatePlanPage();
+  updateTodayPage();
+  showToast('New plan generated! 🔥');
+}
+
+// ===== Progress Page =====
+function updateProgressPage() {
+  document.getElementById('streak-count').textContent = state.progress.streak;
+  document.getElementById('total-workouts').textContent = state.progress.totalWorkouts;
+  document.getElementById('progress-week').textContent = getTrainingWeek();
+  document.getElementById('progress-phase').textContent = getCurrentPhase().name;
+  
+  // Weekly completion ring
+  const weeklyTarget = state.onboarding.days;
+  const weeklyCompleted = state.progress.weeklyCompleted;
+  const percentage = Math.min(100, (weeklyCompleted / weeklyTarget) * 100);
+  const circumference = 2 * Math.PI * 45;
+  const offset = circumference - (percentage / 100) * circumference;
+  
+  document.getElementById('weekly-ring-fill').setAttribute('stroke-dasharray', `${circumference - offset} ${circumference}`);
+  document.getElementById('weekly-completed').textContent = weeklyCompleted;
+  document.getElementById('weekly-target').textContent = weeklyTarget;
+  
+  // Personal records
+  const recordsContainer = document.getElementById('records-list');
+  const records = Object.entries(state.progress.personalRecords);
+  
+  if (records.length > 0) {
+    recordsContainer.innerHTML = records.map(([exerciseId, weight]) => {
+      const exercise = EXERCISE_DATABASE[exerciseId];
+      return `
+        <div class="record-item">
+          <span class="record-exercise">${exercise?.name || exerciseId}</span>
+          <span class="record-weight">${weight} lb</span>
+        </div>
+      `;
+    }).join('');
+  } else {
+    recordsContainer.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-icon">🏆</span>
+        <p>Complete workouts to track your PRs</p>
+      </div>
+    `;
+  }
+  
+  // Workout history
+  const historyContainer = document.getElementById('history-list');
+  
+  if (state.progress.history.length > 0) {
+    historyContainer.innerHTML = state.progress.history.slice(0, 10).map(entry => {
+      const date = new Date(entry.date);
+      return `
+        <div class="history-item">
+          <div>
+            <div class="history-workout">${entry.workout}</div>
+            <div class="history-date">${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+          </div>
+          <span class="history-status ${entry.status}">${entry.status === 'completed' ? 'Done' : 'Skipped'}</span>
+        </div>
+      `;
+    }).join('');
+  } else {
+    historyContainer.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-icon">📝</span>
+        <p>Your workout history will appear here</p>
+      </div>
+    `;
+  }
+}
+
+// ===== Profile Page =====
+function updateProfilePage() {
+  elements.profileName.value = state.user.name;
+  elements.profileAvatar.textContent = state.user.name.charAt(0).toUpperCase();
+  
+  // Update theme toggle
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.theme === state.user.theme);
+  });
+  
+  // Update summary
+  const goalLabels = {
+    'build-muscle': 'Build Muscle',
+    'lose-weight': 'Lose Weight',
+    'get-stronger': 'Get Stronger',
+    'improve-endurance': 'Improve Endurance',
+    'stay-healthy': 'Stay Healthy'
+  };
+  
+  document.getElementById('summary-goal').textContent = goalLabels[state.onboarding.goal] || '-';
+  document.getElementById('summary-level').textContent = state.onboarding.level ? state.onboarding.level.charAt(0).toUpperCase() + state.onboarding.level.slice(1) : '-';
+  document.getElementById('summary-equipment').textContent = state.onboarding.equipment.length > 0 
+    ? state.onboarding.equipment.length + ' types'
+    : '-';
+  document.getElementById('summary-days').textContent = state.onboarding.days ? `${state.onboarding.days} days/week` : '-';
+}
+
+function handleNameChange() {
+  const name = elements.profileName.value.trim() || 'Anonymous';
+  state.user.name = name;
+  elements.profileAvatar.textContent = name.charAt(0).toUpperCase();
+  saveState();
+}
+
+function handleThemeChange(theme) {
+  state.user.theme = theme;
+  applyTheme(theme);
+  saveState();
+  
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.theme === theme);
+  });
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0a0a0a' : '#f5f5f7');
+}
+
+function handleReset() {
+  localStorage.removeItem('fitforge_state');
+  location.reload();
+}
+
+// ===== Modals & Toast =====
+function showModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function hideModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+function showToast(message) {
+  elements.toastMessage.textContent = message;
+  elements.toast.classList.remove('hidden');
+  
+  setTimeout(() => {
+    elements.toast.classList.add('hidden');
+  }, 3000);
+}
+
+// ===== Initialize =====
+document.addEventListener('DOMContentLoaded', init);
